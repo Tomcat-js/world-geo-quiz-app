@@ -111,6 +111,25 @@
     opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;z-index:200;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* Auth screen */
+  #screen-auth{background:linear-gradient(135deg,#0f1f2e 0%,#1a3347 100%);min-height:100vh;}
+  #screen-auth header h1{color:#e8f0ff;}
+  #screen-auth header .subtitle{color:#8aabcc;}
+  .auth-card{background:#fff;border-radius:20px;padding:36px 32px;width:min(380px,90vw);margin:24px auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+  .auth-tabs{display:flex;background:#f0f4f7;border-radius:10px;padding:3px;margin-bottom:24px;}
+  .auth-tab{flex:1;padding:9px;border:none;background:transparent;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;color:#5a6a7a;transition:all .15s;}
+  .auth-tab.active{background:#fff;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,0.12);}
+  .auth-field{margin-bottom:16px;}
+  .auth-field label{display:block;font-size:0.82rem;font-weight:700;color:#4a5a6a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+  .auth-field input{width:100%;padding:11px 14px;border:2px solid #d0dde8;border-radius:10px;font-size:1rem;outline:none;transition:border-color .15s;}
+  .auth-field input:focus{border-color:var(--accent);}
+  .auth-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:background .15s,transform .08s;margin-top:4px;}
+  .auth-btn:hover{background:#2f6d92;}
+  .auth-btn:active{transform:scale(0.98);}
+  .auth-error{color:var(--bad);font-size:0.87rem;font-weight:600;margin-top:10px;min-height:1.2em;text-align:center;}
+  .auth-hint{font-size:0.82rem;color:#7a8a9a;text-align:center;margin-top:16px;}
+  .logout-btn{background:transparent;border:1px solid rgba(255,255,255,0.35);color:rgba(255,255,255,0.75);border-radius:8px;padding:5px 12px;font-size:0.8rem;cursor:pointer;transition:all .15s;}
+  .logout-btn:hover{background:rgba(255,255,255,0.15);color:#fff;}
 
   /* Game screen (per-continent) */
   .game-header-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:2px;}
@@ -223,14 +242,47 @@
   .wq-tile{display:flex;flex-direction:column;align-items:center;cursor:grab;user-select:none;touch-action:none;}
   .wq-hint{text-align:center;font-size:0.8rem;color:#637373;max-width:640px;margin:2px auto 8px;}
 </style>
+<!-- Supabase JS client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
+<!-- ============ AUTH SCREEN ============ -->
+<section class="screen show" id="screen-auth">
+  <header>
+    <h1>🌍 World Geo Quiz</h1>
+    <p class="subtitle">Sign in to save your progress</p>
+  </header>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="authTabSignIn">Sign In</button>
+      <button class="auth-tab" id="authTabSignUp">Sign Up</button>
+    </div>
+    <form id="authForm" autocomplete="on">
+      <div class="auth-field">
+        <label for="authName">First Name</label>
+        <input id="authName" type="text" placeholder="e.g. Tom" autocomplete="given-name" required />
+      </div>
+      <div class="auth-field">
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" placeholder="Enter password" autocomplete="current-password" required minlength="6" />
+      </div>
+      <button type="submit" class="auth-btn" id="authSubmitBtn">Sign In</button>
+      <p class="auth-error" id="authError"></p>
+      <p class="auth-hint" id="authHint">No account yet? <a href="#" id="authSwitch" style="color:var(--accent);font-weight:700;">Sign up</a></p>
+    </form>
+  </div>
+</section>
+
 <!-- ============ WORLD SCREEN ============ -->
-<section class="screen show" id="screen-world">
+<section class="screen" id="screen-world">
   <header>
     <h1>🌍 World Geography Quiz</h1>
     <p class="subtitle">Tap a continent to start playing. More continents are on the way!</p>
+    <div style="margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <span id="worldUserGreet" style="font-size:0.85rem;color:#8aabcc;font-weight:600;"></span>
+      <button class="logout-btn" id="logoutBtn" style="display:none;">Log out</button>
+    </div>
   </header>
   <div class="world-wrap" id="worldWrap">
     <img src="earth.jpg" alt="Earth from space" draggable="false">
@@ -678,6 +730,49 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   const screenRegions = document.getElementById("screen-regions");
   const screenGame = document.getElementById("screen-game");
   const screenWorldQuiz = document.getElementById("screen-world-quiz");
+  const screenAuth = document.getElementById("screen-auth");
+  let currentUser = null;
+  function onAuthSuccess(name) {
+    currentUser = { name };
+    document.getElementById("worldUserGreet").textContent = "Hi, " + name + "!";
+    document.getElementById("logoutBtn").style.display = "inline-block";
+    showScreen("world");
+    refreshWorldBadges();
+  }
+  let authMode = "signin";
+  function setAuthMode(mode) {
+    authMode = mode;
+    document.getElementById("authTabSignIn").classList.toggle("active", mode === "signin");
+    document.getElementById("authTabSignUp").classList.toggle("active", mode === "signup");
+    document.getElementById("authSubmitBtn").textContent = mode === "signin" ? "Sign In" : "Create Account";
+    document.getElementById("authHint").innerHTML = mode === "signin"
+      ? 'No account yet? <a href="#" id="authSwitch" style="color:var(--accent);font-weight:700;">Sign up<\/a>'
+      : 'Already have an account? <a href="#" id="authSwitch" style="color:var(--accent);font-weight:700;">Sign in<\/a>';
+    document.getElementById("authError").textContent = "";
+    document.getElementById("authSwitch").addEventListener("click",function(e){e.preventDefault();setAuthMode(authMode==="signin"?"signup":"signin");});
+  }
+  document.getElementById("authTabSignIn").addEventListener("click",()=>setAuthMode("signin"));
+  document.getElementById("authTabSignUp").addEventListener("click",()=>setAuthMode("signup"));
+  document.getElementById("authSwitch").addEventListener("click",function(e){e.preventDefault();setAuthMode(authMode==="signin"?"signup":"signin");});
+  document.getElementById("authForm").addEventListener("submit",async function(e){
+    e.preventDefault();
+    const name=document.getElementById("authName").value.trim();
+    if(!name){document.getElementById("authError").textContent="Please enter your first name.";return;}
+    document.getElementById("authError").textContent="";
+    const btn=document.getElementById("authSubmitBtn");
+    btn.disabled=true;
+    btn.textContent=authMode==="signin"?"Signing in…":"Creating account…";
+    // Supabase auth wired in Task #40 — placeholder passthrough:
+    setTimeout(()=>{btn.disabled=false;onAuthSuccess(name);},400);
+  });
+  document.getElementById("logoutBtn").addEventListener("click",function(){
+    currentUser=null;
+    document.getElementById("worldUserGreet").textContent="";
+    document.getElementById("logoutBtn").style.display="none";
+    document.getElementById("authName").value="";
+    document.getElementById("authPassword").value="";
+    showScreen("auth");
+  });
   const worldSvg = document.getElementById("worldSvg");
   const regionWrap = document.getElementById("regionWrap");
   const regionsTitle = document.getElementById("regionsTitle");
@@ -1476,7 +1571,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     showScreen("world");
     refreshWorldBadges();
   });
-  showScreen("world");
+  showScreen("auth");
 })();
 </script>
 </body>
