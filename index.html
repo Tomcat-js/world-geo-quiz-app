@@ -763,6 +763,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   document.getElementById("authForm").addEventListener("submit",async function(e){
     e.preventDefault();
     const name=document.getElementById("authName").value.trim();
+    const pass=document.getElementById("authPassword").value;
     if(!name){document.getElementById("authError").textContent="Please enter your first name.";return;}
     document.getElementById("authError").textContent="";
     const btn=document.getElementById("authSubmitBtn");
