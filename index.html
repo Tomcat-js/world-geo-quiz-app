@@ -691,6 +691,12 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
 </script>
 <script>
 (function(){
+  /* ─── Supabase client ─── */
+  const SUPABASE_URL = 'https://rfyeieqfcjfepadaslid.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_9rNeziArUt6pJZKHLaw6oA_fJJDYzHV';
+  const _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  function nameToEmail(n){ return n.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,24)+'@geo.quiz'; }
+
   "use strict";
 
   const SVG_NS = "http://www.w3.org/2000/svg";
@@ -762,8 +768,31 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     const btn=document.getElementById("authSubmitBtn");
     btn.disabled=true;
     btn.textContent=authMode==="signin"?"Signing in…":"Creating account…";
-    // Supabase auth wired in Task #40 — placeholder passthrough:
-    setTimeout(()=>{btn.disabled=false;onAuthSuccess(name);},400);
+    try {
+      const email = nameToEmail(name);
+      let res;
+      if (authMode === "signup") {
+        res = await _supa.auth.signUp({ email, password: pass, options:{ data:{ name } } });
+        if (res.error) throw res.error;
+        if (!res.data.session) {
+          document.getElementById("authError").textContent = "Account created! Check your email to confirm, or disable email confirmation in Supabase settings.";
+          btn.disabled=false; btn.textContent="Create Account"; return;
+        }
+      } else {
+        res = await _supa.auth.signInWithPassword({ email, password: pass });
+        if (res.error) throw res.error;
+      }
+      btn.disabled=false;
+      onAuthSuccess(name);
+    } catch(err) {
+      const msg = err.message||"";
+      document.getElementById("authError").textContent =
+        msg.includes("already registered") ? "That name is taken — choose another." :
+        msg.includes("Invalid login") ? "Name or password is incorrect." :
+        msg || "Something went wrong, please try again.";
+      btn.disabled=false;
+      btn.textContent = authMode==="signin" ? "Sign In" : "Create Account";
+    }
   });
   document.getElementById("logoutBtn").addEventListener("click",function(){
     currentUser=null;
@@ -771,7 +800,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     document.getElementById("logoutBtn").style.display="none";
     document.getElementById("authName").value="";
     document.getElementById("authPassword").value="";
-    showScreen("auth");
+    _supa.auth.signOut(); showScreen("auth");
   });
   const worldSvg = document.getElementById("worldSvg");
   const regionWrap = document.getElementById("regionWrap");
@@ -1571,7 +1600,14 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     showScreen("world");
     refreshWorldBadges();
   });
-  showScreen("auth");
+  _supa.auth.getSession().then(({data:{session}})=>{
+    if(session){
+      const name=session.user.user_metadata?.name||session.user.email.split('@')[0];
+      onAuthSuccess(name);
+    } else {
+      showScreen("auth");
+    }
+  });
 })();
 </script>
 </body>
