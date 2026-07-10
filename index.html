@@ -773,12 +773,12 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   const screenAuth = document.getElementById("screen-auth");
   let currentUser = null;
   async function onAuthSuccess(name) {
-    await loadProgress(); refreshWorldBadges();
     currentUser = { name };
     document.getElementById("worldUserGreet").textContent = "Hi, " + name + "!";
     document.getElementById("logoutBtn").style.display = "inline-block";
     showScreen("world");
     refreshWorldBadges();
+    loadProgress().then(() => refreshWorldBadges());
   }
   let authMode = "signin";
   function setAuthMode(mode) {
@@ -819,6 +819,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
         if (res.error) throw res.error;
       }
       btn.disabled=false;
+      btn.textContent=authMode==="signin"?"Sign In":"Create Account";
       onAuthSuccess(name);
     } catch(err) {
       const msg = err.message||"";
