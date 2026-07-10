@@ -880,7 +880,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     document.getElementById("logoutBtn").style.display = "inline-block";
     showScreen("world");
     refreshWorldBadges();
-    loadProgress().then(() => { refreshWorldBadges(); updateScoreRing(); });
+    loadProgress().then(() => { refreshWorldBadges(); updateScoreRing();refreshWorldQuiz();  });
   }
   let authMode = "signin";
   function setAuthMode(mode) {
