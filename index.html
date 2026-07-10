@@ -938,7 +938,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     document.getElementById("logoutBtn").style.display="none";
     document.getElementById("authName").value="";
     document.getElementById("authPassword").value="";
-    _supa.auth.signOut(); showScreen("auth");
+    _supa.auth.signOut().then(() => window.location.reload());
   });
   const worldSvg = document.getElementById("worldSvg");
   const regionWrap = document.getElementById("regionWrap");
