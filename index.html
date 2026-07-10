@@ -725,12 +725,12 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
           snap[id] = { s: [...st.solved], w: [...st.wrong] };
         }
       }
-      localStorage.setItem('geo_v2', JSON.stringify(snap));
+      localStorage.setItem('geo_v2_' + currentUser.id, JSON.stringify(snap));
     } catch(e) {}
   }
-  function loadLocalProgress() {
+  function loadLocalProgress(uid) {
     try {
-      const snap = JSON.parse(localStorage.getItem('geo_v2') || 'null');
+      const snap = JSON.parse(localStorage.getItem('geo_v2_' + (uid||'')) || 'null');
       if (!snap) return;
       for (const [id, data] of Object.entries(snap)) {
         const ds = CONTINENT_DATASETS[id];
@@ -870,7 +870,10 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   const screenAuth = document.getElementById("screen-auth");
   let currentUser = null;
   async function onAuthSuccess(name) {
-    currentUser = { name };
+    const { data: { session: _s } } = await _supa.auth.getSession();
+    const uid = _s?.user?.id || '';
+    currentUser = { name, id: uid };
+    loadLocalProgress(uid);
     document.getElementById("worldUserGreet").textContent = "Hi, " + name + "!";
     document.getElementById("logoutBtn").style.display = "inline-block";
     showScreen("world");
@@ -930,6 +933,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   });
   document.getElementById("logoutBtn").addEventListener("click",function(){
     currentUser=null;
+    for (const k of Object.keys(gameState)) delete gameState[k];
     document.getElementById("worldUserGreet").textContent="";
     document.getElementById("logoutBtn").style.display="none";
     document.getElementById("authName").value="";
@@ -1142,7 +1146,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   const ACTIVE_SIZE = 999;
   let currentId = null;
   let byCode = {};
-  const gameState = {}; // id -> {pool, active, placements, solved, attempts}  loadLocalProgress();
+  const gameState = {}; // id -> {pool, active, placements, solved, attempts}
 
 
   function shuffle(arr){
