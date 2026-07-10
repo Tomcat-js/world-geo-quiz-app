@@ -1565,6 +1565,8 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   });
   backBtn.addEventListener("click", () => {
     if(currentGameParent === "world-quiz"){
+      wqNamed.add(currentId);
+      saveWQProgress(currentId);
       refreshWorldQuiz();
       showScreen("world-quiz");
     } else if(currentGameParent && currentGameParent !== "world" && REGION_GROUPS[currentGameParent]){
