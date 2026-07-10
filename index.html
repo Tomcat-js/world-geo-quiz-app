@@ -868,6 +868,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     screenRegions.classList.toggle("show", name === "regions");
     screenGame.classList.toggle("show", name === "game");
     screenWorldQuiz.classList.toggle("show", name === "world-quiz");
+    if (name === "world") { refreshWorldBadges(); updateScoreRing(); }
   }
 
   function buildWorldMap(){
