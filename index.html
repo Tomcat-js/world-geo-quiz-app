@@ -84,7 +84,7 @@
   .world-wrap svg{position:absolute;top:0;left:0;width:100%;height:100%;display:block!important;pointer-events:none;}
   .continent{fill:rgba(255,255,255,0.03)!important;stroke:rgba(255,255,255,0.0)!important;}
   .continent.playable{fill:rgba(50,220,130,1)!important;}
-  .continent.playable:hover{fill:rgba(80,255,160,1)!important;stroke:rgba(100,255,160,0.5)!important;}
+  .continent.playable:hover{fill:rgba(80,255,160,1)!important;fill-opacity:1!important;stroke:rgba(100,255,160,0.5)!important;}
   .continent.solved{fill:rgba(80,200,100,0.2)!important;}
   .continent-label,.continent-badge{display:none;}
 
@@ -1057,7 +1057,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       const path = worldSvg.querySelector('path[data-id="' + c.id + '"]');
       if(path){
         const frac = total ? solvedCount / total : 0;
-        path.style.opacity = 0.55 + frac * 0.45;
+        path.style.fillOpacity = 0.08 + frac * 0.52; path.style.opacity = '';
       }
     });
   }
