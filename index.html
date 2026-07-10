@@ -707,17 +707,16 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   function nameToEmail(n){ return n.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,24)+'@geo.quiz'; }
 
     async function saveWQProgress(itemId) {
-    if (!currentUser) return;
-    const { data:{ session } } = await _supa.auth.getSession();
-    if (!session) return;
-    await _supa.from('user_progress').upsert({
-      user_id: session.user.id,
-      region_id: 'wq:' + itemId,
-      correct_count: 1,
-      wrong_count: 0,
-      is_complete: true,
-    }, { onConflict: 'merge' });
-  }
+  if (!currentUser) return;
+  await _supa.from('progress').delete()
+    .eq('user_id', currentUser.id)
+    .eq('region_id', 'wq:' + itemId);
+  await _supa.from('progress').insert({
+    user_id: currentUser.id,
+    region_id: 'wq:' + itemId,
+    data: { solved: true }
+  });
+}
 
   function saveLocalProgress() {
     try {
