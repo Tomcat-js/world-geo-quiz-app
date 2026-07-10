@@ -1732,42 +1732,112 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     scoreEl.textContent = total > 0 ? correct + ' / ' + total + ' correct!' : 'Every country named!';
     starsEl.textContent = isWQ ? '🌟🌟🌟' : (pct===1?'⭐⭐⭐':pct>=0.7?'⭐⭐':'⭐');
     [emoji, titleEl, scoreEl, starsEl, btn].forEach(el => {
+      el.style.animation = '';
       el.style.opacity = '0';
-      el.style.transform = 'translateY(18px)';
+      el.style.transform = isWQ ? 'scale(0.3)' : 'translateY(18px)';
       el.style.transition = 'none';
     });
+    titleEl.style.color = '#fff';
+    titleEl.style.fontSize = isWQ ? '3rem' : '2.3rem';
+    starsEl.style.fontSize = isWQ ? '3.5rem' : '2.8rem';
+    ov.style.background = isWQ
+      ? 'radial-gradient(ellipse at center,rgba(30,5,80,.99),rgba(3,0,20,.99))'
+      : 'radial-gradient(ellipse at center,rgba(10,20,60,.98),rgba(3,8,25,.99))';
     ov.style.display = 'flex';
     [emoji, titleEl, scoreEl, starsEl, btn].forEach((el, i) => {
       setTimeout(() => {
-        el.style.transition = 'opacity .45s ease, transform .45s ease';
+        el.style.transition = isWQ
+          ? 'opacity .5s ease, transform .6s cubic-bezier(0.175,0.885,0.32,1.275)'
+          : 'opacity .45s ease, transform .45s ease';
         el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
-      }, 80 + i * 110);
+        el.style.transform = 'scale(1) translateY(0)';
+      }, isWQ ? 120 + i * 160 : 80 + i * 110);
     });
+    if (isWQ) {
+      if (!document.getElementById('cel-kf')) {
+        const s = document.createElement('style');
+        s.id = 'cel-kf';
+        s.textContent = '@keyframes celGlobe{0%,100%{filter:drop-shadow(0 0 18px #c77dff) drop-shadow(0 0 36px #4d96ff);transform:scale(1)}50%{filter:drop-shadow(0 0 40px #ffd93d) drop-shadow(0 0 80px #ff6b6b);transform:scale(1.12)}}@keyframes celShine{0%,100%{letter-spacing:-.01em;text-shadow:0 0 20px rgba(255,217,61,.4)}50%{letter-spacing:.06em;text-shadow:0 0 40px rgba(255,217,61,.9),0 0 80px rgba(255,107,107,.5)}}';
+        document.head.appendChild(s);
+      }
+      setTimeout(() => {
+        emoji.style.animation = 'celGlobe 2.2s ease-in-out infinite';
+        titleEl.style.color = '#ffd93d';
+        titleEl.style.animation = 'celShine 2.5s ease-in-out infinite';
+      }, 900);
+    }
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const ctx = canvas.getContext('2d');
     const cols = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#c77dff','#f06292','#00d4ff'];
-    const pp = Array.from({length:170}, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      w: Math.random() * 13 + 4,
-      h: Math.random() * 7 + 3,
-      color: cols[Math.floor(Math.random() * cols.length)],
-      rot: Math.random() * Math.PI * 2,
-      vx: (Math.random() - 0.5) * 3.5,
-      vy: Math.random() * 4 + 2,
-      vr: (Math.random() - 0.5) * 0.16,
-    }));
+    const count = isWQ ? 320 : 170;
+    const cx = canvas.width / 2, cy = canvas.height * 0.45;
+    const pp = Array.from({length: count}, () => {
+      if (isWQ) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 14 + 2;
+        return {
+          x: cx+(Math.random()-.5)*80, y: cy+(Math.random()-.5)*80,
+          w: Math.random()*14+5, h: Math.random()*8+3,
+          color: cols[Math.floor(Math.random()*cols.length)],
+          rot: Math.random()*Math.PI*2,
+          vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed-4,
+          vr: (Math.random()-.5)*0.25, gravity: 0.28,
+        };
+      }
+      return {
+        x: Math.random()*canvas.width, y: Math.random()*canvas.height-canvas.height,
+        w: Math.random()*13+4, h: Math.random()*7+3,
+        color: cols[Math.floor(Math.random()*cols.length)],
+        rot: Math.random()*Math.PI*2,
+        vx: (Math.random()-.5)*3.5, vy: Math.random()*4+2,
+        vr: (Math.random()-.5)*0.16, gravity: 0,
+      };
+    });
+    const stars = isWQ ? Array.from({length:90}, () => ({
+      x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+      r: Math.random()*2+0.3, a: Math.random(), da: (Math.random()*.02+.005)*(Math.random()>.5?1:-1),
+    })) : null;
+    const fireworks = isWQ ? [] : null;
+    let fwTick = 0;
     if (ov._raf) cancelAnimationFrame(ov._raf);
     function frame() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (isWQ) {
+        stars.forEach(s => {
+          s.a += s.da; if (s.a < .05 || s.a > 1) s.da *= -1;
+          ctx.save(); ctx.globalAlpha=s.a; ctx.fillStyle='#fff';
+          ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); ctx.restore();
+        });
+        fwTick++;
+        if (fwTick % 45 === 0) {
+          const fc = cols[Math.floor(Math.random()*cols.length)];
+          const fx = Math.random()*canvas.width, fy = Math.random()*canvas.height*.55;
+          for (let i = 0; i < 36; i++) {
+            const a = (i/36)*Math.PI*2, spd = Math.random()*5+3;
+            fireworks.push({x:fx,y:fy,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,a:1,color:fc,r:Math.random()*3+1.5});
+          }
+        }
+        for (let i = fireworks.length-1; i >= 0; i--) {
+          const fw = fireworks[i];
+          fw.x+=fw.vx; fw.y+=fw.vy; fw.vy+=.12; fw.a-=.022;
+          if (fw.a<=0){fireworks.splice(i,1);continue;}
+          ctx.save(); ctx.globalAlpha=fw.a; ctx.fillStyle=fw.color;
+          ctx.beginPath(); ctx.arc(fw.x,fw.y,fw.r,0,Math.PI*2); ctx.fill(); ctx.restore();
+        }
+      }
       pp.forEach(p => {
-        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-        if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; }
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-        ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
+        p.x+=p.vx; p.y+=p.vy; p.vy+=p.gravity; p.rot+=p.vr;
+        if (isWQ) {
+          p.vx*=.992;
+          if (p.y>canvas.height+20){p.y=-20;p.x=Math.random()*canvas.width;p.vy=Math.random()*4+1;p.vx=(Math.random()-.5)*3;}
+          if (p.x<-20) p.x=canvas.width+20;
+          if (p.x>canvas.width+20) p.x=-20;
+        } else {
+          if (p.y>canvas.height){p.y=-20;p.x=Math.random()*canvas.width;}
+        }
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
       });
       ov._raf = requestAnimationFrame(frame);
     }
@@ -1776,6 +1846,11 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       ov.style.display = 'none';
       cancelAnimationFrame(ov._raf);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      emoji.style.animation = '';
+      titleEl.style.animation = '';
+      titleEl.style.color = '#fff';
+      titleEl.style.fontSize = '2.3rem';
+      starsEl.style.fontSize = '2.8rem';
     };
   }
 })();
