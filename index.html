@@ -726,19 +726,15 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     if (!data) return;
     data.forEach(row => {
       loadedWrongCounts[row.region_id] = row.wrong_count;
-      if (row.correct_count > 0 || row.wrong_count > 0) {
+      loadedCorrectCounts[row.region_id] = row.correct_count;
+      if (row.is_complete && CONTINENT_DATASETS[row.region_id]) {
         if (!gameState[row.region_id]) gameState[row.region_id] = {
           solved: new Set(), wrong: new Set(), placements: {}, active: [], pool: []
         };
         const st = gameState[row.region_id];
-        if (row.is_complete && CONTINENT_DATASETS[row.region_id]) {
-          CONTINENT_DATASETS[row.region_id].countries.forEach(c => st.solved.add(c.code));
-        } else {
-          for (let i = 0; i < row.correct_count; i++) st.solved.add('__loaded__' + i);
-        }
+        CONTINENT_DATASETS[row.region_id].countries.forEach(c => st.solved.add(c.code));
         for (let i = 0; i < row.wrong_count; i++) st.wrong.add('__wrong__' + i);
-      }
-    });
+      });
   }
 
   "use strict";
@@ -906,6 +902,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   }
 
   let loadedWrongCounts = {};
+  let loadedCorrectCounts = {};
 
   function calcGlobalScore() {
     let total = 0, wrong = 0;
@@ -927,7 +924,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       if (!ds) return;
       total += ds.countries.length;
       const st = gameState[id];
-      solvedCount += st ? st.solved.size : 0;
+      solvedCount += Math.max(st ? st.solved.size : 0, loadedCorrectCounts[id] || 0);
       wrong += Math.max(st ? st.wrong.size : 0, loadedWrongCounts[id] || 0);
     });
     if (total === 0) return;
