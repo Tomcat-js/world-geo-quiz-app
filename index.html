@@ -731,7 +731,11 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
           solved: new Set(), wrong: new Set(), placements: {}, active: [], pool: []
         };
         const st = gameState[row.region_id];
-        for (let i = 0; i < row.correct_count; i++) st.solved.add('__loaded__' + i);
+        if (row.is_complete && CONTINENT_DATASETS[row.region_id]) {
+          CONTINENT_DATASETS[row.region_id].countries.forEach(c => st.solved.add(c.code));
+        } else {
+          for (let i = 0; i < row.correct_count; i++) st.solved.add('__loaded__' + i);
+        }
         for (let i = 0; i < row.wrong_count; i++) st.wrong.add('__wrong__' + i);
       }
     });
