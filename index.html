@@ -297,7 +297,6 @@
   </header>
   <div class="globe-wrap"><svg class="score-ring" viewBox="0 0 200 200" id="scoreRingSvg"><circle class="ring-bg" cx="100" cy="100" r="90"/><circle class="ring-progress" cx="100" cy="100" r="90" id="scoreRingProgress" transform="rotate(-90 100 100)"/></svg><div class="world-wrap" id="worldWrap">
     <img src="https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=900&q=85" alt="Earth from space" draggable="false">
-    <svg id="worldSvg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" style="display:none"></svg>
   </div></div>
   <div id="continentBtns" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:14px 0;padding:0 12px;"></div>
   <div class="score-pct" id="scorePct"><span class="pct-num" id="scorePctNum">—</span><span class="pct-label">global accuracy</span></div>
@@ -970,6 +969,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   }
 
   function buildWorldMap(){
+    if(!worldSvg) return;
     worldSvg.innerHTML = "";
     WORLD_CONTINENTS.forEach(c => {
       const path = document.createElementNS(SVG_NS, "path");
@@ -1073,11 +1073,6 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       }
       const badge = document.getElementById("badge-" + c.id);
       if(badge) badge.textContent = solvedCount + "/" + total;
-      const path = worldSvg.querySelector('path[data-id="' + c.id + '"]');
-      if(path){
-        const frac = total ? solvedCount / total : 0;
-        
-      }
       const cBtn=document.getElementById('cbt-'+c.id);
       if(cBtn)cBtn.querySelector('.cbt-prog').textContent=solvedCount+'/'+total;
     });
