@@ -702,6 +702,19 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   const _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   function nameToEmail(n){ return n.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,24)+'@geo.quiz'; }
 
+    async function saveWQProgress(itemId) {
+    if (!currentUser) return;
+    const { data:{ session } } = await _supa.auth.getSession();
+    if (!session) return;
+    await _supa.from('user_progress').upsert({
+      user_id: session.user.id,
+      region_id: 'wq:' + itemId,
+      correct_count: 1,
+      wrong_count: 0,
+      is_complete: true,
+    }, { onConflict: 'merge' });
+  }
+
   async function saveProgress(regionId) {
     if (!currentUser) return;
     const ds = CONTINENT_DATASETS[regionId];
@@ -725,6 +738,11 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     const { data } = await _supa.from('progress').select('*').eq('user_id', session.user.id);
     if (!data) return;
     data.forEach(row => {
+      if (row.region_id && row.region_id.substring(0,3) === 'wq:') {
+        wqNamed.add(row.region_id.slice(3));
+        wqState.solved.add(row.region_id.slice(3));
+        return;
+      }
       loadedWrongCounts[row.region_id] = row.wrong_count;
       loadedCorrectCounts[row.region_id] = row.correct_count;
       if (row.is_complete && CONTINENT_DATASETS[row.region_id]) {
@@ -1654,6 +1672,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       if(droppedId === item.id){
         // Correct!
         wqNamed.add(item.id);
+        saveWQProgress(item.id);
         buildWorldQuizMap();
         buildWorldQuizTray();
         const quizItem = WORLD_QUIZ_ITEMS.find(i => i.id === item.id);
