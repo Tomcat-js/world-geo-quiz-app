@@ -734,7 +734,8 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
         const st = gameState[row.region_id];
         CONTINENT_DATASETS[row.region_id].countries.forEach(c => st.solved.add(c.code));
         for (let i = 0; i < row.wrong_count; i++) st.wrong.add('__wrong__' + i);
-      });
+      }
+    });
   }
 
   "use strict";
