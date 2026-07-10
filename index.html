@@ -857,6 +857,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   }
 
   function showScreen(name){
+    screenAuth.classList.toggle("show", name === "auth");
     screenWorld.classList.toggle("show", name === "world");
     screenRegions.classList.toggle("show", name === "regions");
     screenGame.classList.toggle("show", name === "game");
