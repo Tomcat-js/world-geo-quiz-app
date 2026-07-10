@@ -151,6 +151,7 @@
     fill:var(--land); stroke:var(--land-border); stroke-width:1.4; cursor:default;
     transition:fill .15s ease, stroke .15s ease;
   }
+  .country-ghost{fill:#c8d8dc;stroke:#9ab2bb;stroke-width:0.6;opacity:0.55;fill-rule:evenodd;pointer-events:none;}
   .map-wrap path.country.solved{fill:#a9d6a1; pointer-events:none;}
   .map-wrap path.country.wrong{fill:#e6a1a6; pointer-events:none;}
   .map-wrap path.country.flash-bad{fill:#f3b6bd;}
@@ -790,6 +791,11 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   Object.keys(ASIA_REGIONS).forEach(id => { CONTINENT_DATASETS[id] = ASIA_REGIONS[id]; });
   Object.keys(EUROPE_REGIONS).forEach(id => { CONTINENT_DATASETS[id] = EUROPE_REGIONS[id]; });
 
+  const GHOST_SOURCES = {};
+  ['north-africa','sub-saharan-africa'].forEach(id => { GHOST_SOURCES[id] = AFRICA_COUNTRIES; });
+  const _allEurope = Object.values(EUROPE_REGIONS).flatMap(r => r.countries);
+  ['west-europe','north-europe','south-europe','east-europe'].forEach(id => { GHOST_SOURCES[id] = _allEurope; });
+
   /* ---------------- WORLD SCREEN ---------------- */
   const screenWorld = document.getElementById("screen-world");
   const screenRegions = document.getElementById("screen-regions");
@@ -1162,6 +1168,18 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
 
   function buildMap(countries){
     svg.innerHTML = "";
+    const ghosts = GHOST_SOURCES[currentId];
+    if (ghosts) {
+      const activeSet = new Set(countries.map(c => c.code));
+      ghosts.forEach(c => {
+        if (activeSet.has(c.code)) return;
+        const g = document.createElementNS(SVG_NS, 'path');
+        g.setAttribute('d', c.d);
+        g.setAttribute('class', 'country-ghost');
+        g.setAttribute('fill-rule', 'evenodd');
+        svg.appendChild(g);
+      });
+    }
     countries.forEach(c => {
       const path = document.createElementNS(SVG_NS, "path");
       path.setAttribute("d", c.d);
