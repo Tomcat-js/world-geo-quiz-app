@@ -1442,7 +1442,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       refreshWorldBadges();
 
       if(st.solved.size + st.wrong.size === ds.countries.length){
-        showToast("All " + ds.countries.length + " countries done — " + st.solved.size + " correct. Look over the map, then hit Restart to play again.", 4500);
+        showCelebration(ds.countries.length, st.solved.size, null);
       saveProgress(currentId);
       }
     }, correctCodes.length || wrongCodes.length ? 450 : 0);
@@ -1674,7 +1674,10 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
         wqNamed.add(item.id);
         saveWQProgress(item.id);
         buildWorldQuizMap();
-        buildWorldQuizTray();
+        buildWorldQuizTray();        if (wqNamed.size >= WORLD_QUIZ_ITEMS.length) {
+          showCelebration(0, 0, 'World Quiz Complete!');
+        }
+
         const quizItem = WORLD_QUIZ_ITEMS.find(i => i.id === item.id);
         if(quizItem && quizItem.type === "region-live"){
           showToast("✅ " + item.label + " — click it on the map to play the quiz!", 2800);
@@ -1713,7 +1716,70 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       showScreen("auth");
     }
   });
+
+  function showCelebration(total, correct, title) {
+    const ov = document.getElementById('screen-celebrate');
+    const canvas = document.getElementById('confettiCanvas');
+    const emoji = document.getElementById('celEmoji');
+    const titleEl = document.getElementById('celTitle');
+    const scoreEl = document.getElementById('celScore');
+    const starsEl = document.getElementById('celStars');
+    const btn = document.getElementById('celBtn');
+    const isWQ = !total;
+    const pct = total > 0 ? correct / total : 1;
+    emoji.textContent = isWQ ? '🌐' : (pct===1 ? '🏆' : pct>=0.7 ? '🌍' : '🗺️');
+    titleEl.textContent = title || 'Region Complete!';
+    scoreEl.textContent = total > 0 ? correct + ' / ' + total + ' correct!' : 'Every country named!';
+    starsEl.textContent = isWQ ? '🌟🌟🌟' : (pct===1?'⭐⭐⭐':pct>=0.7?'⭐⭐':'⭐');
+    [emoji, titleEl, scoreEl, starsEl, btn].forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(18px)';
+      el.style.transition = 'none';
+    });
+    ov.style.display = 'flex';
+    [emoji, titleEl, scoreEl, starsEl, btn].forEach((el, i) => {
+      setTimeout(() => {
+        el.style.transition = 'opacity .45s ease, transform .45s ease';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, 80 + i * 110);
+    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    const cols = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#c77dff','#f06292','#00d4ff'];
+    const pp = Array.from({length:170}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 13 + 4,
+      h: Math.random() * 7 + 3,
+      color: cols[Math.floor(Math.random() * cols.length)],
+      rot: Math.random() * Math.PI * 2,
+      vx: (Math.random() - 0.5) * 3.5,
+      vy: Math.random() * 4 + 2,
+      vr: (Math.random() - 0.5) * 0.16,
+    }));
+    if (ov._raf) cancelAnimationFrame(ov._raf);
+    function frame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pp.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; }
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      });
+      ov._raf = requestAnimationFrame(frame);
+    }
+    frame();
+    btn.onclick = () => {
+      ov.style.display = 'none';
+      cancelAnimationFrame(ov._raf);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+  }
 })();
 </script>
+<div id="screen-celebrate" style="display:none;position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at center,rgba(10,20,60,.98),rgba(3,8,25,.99));flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.3rem;padding:2rem"><canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000"></canvas><div id="celEmoji" style="font-size:5.5rem;line-height:1.1;margin-bottom:.4rem">🌍</div><div id="celTitle" style="font-size:2.3rem;font-weight:900;color:#fff;margin:.2rem 0;letter-spacing:-.01em">Complete!</div><div id="celScore" style="font-size:1.25rem;color:rgba(255,255,255,.75);margin:.3rem 0 .6rem"></div><div id="celStars" style="font-size:2.8rem;letter-spacing:.2rem;margin-bottom:1.4rem">⭐⭐⭐</div><button id="celBtn" style="padding:.85rem 2.6rem;background:linear-gradient(135deg,#4ecdc4,#44af69);color:#fff;border:none;border-radius:2rem;font-size:1.15rem;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(78,205,196,.5);letter-spacing:.02em">Keep Exploring 🌏</button></div>
 </body>
 </html>
