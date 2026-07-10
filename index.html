@@ -869,11 +869,9 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   const screenWorldQuiz = document.getElementById("screen-world-quiz");
   const screenAuth = document.getElementById("screen-auth");
   let currentUser = null;
-  async function onAuthSuccess(name) {
-    const { data: { session: _s } } = await _supa.auth.getSession();
-    const uid = _s?.user?.id || '';
-    currentUser = { name, id: uid };
-    loadLocalProgress(uid);
+  function onAuthSuccess(name, uid) {
+    currentUser = { name, id: uid || '' };
+    loadLocalProgress(uid || '');
     document.getElementById("worldUserGreet").textContent = "Hi, " + name + "!";
     document.getElementById("logoutBtn").style.display = "inline-block";
     showScreen("world");
@@ -920,7 +918,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       }
       btn.disabled=false;
       btn.textContent=authMode==="signin"?"Sign In":"Create Account";
-      onAuthSuccess(name);
+      onAuthSuccess(name, res?.data?.session?.user?.id || '');
     } catch(err) {
       const msg = err.message||"";
       document.getElementById("authError").textContent =
@@ -1802,7 +1800,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   _supa.auth.getSession().then(({data:{session}})=>{
     if(session){
       const name=session.user.user_metadata?.name||session.user.email.split('@')[0];
-      onAuthSuccess(name);
+      onAuthSuccess(name, session.user.id);
     } else {
       showScreen("auth");
     }
