@@ -82,7 +82,7 @@
   .score-pct .pct-label{font-size:0.72rem;color:#8aabcc;text-transform:uppercase;letter-spacing:0.12em;display:block;margin-top:-2px;}
   .world-wrap img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;}
   .world-wrap svg{position:absolute;top:0;left:0;width:100%;height:100%;display:block!important;pointer-events:none;}
-  .continent{fill:rgba(255,255,255,0.03)!important;stroke:rgba(255,255,255,0.0)!important;}
+  .continent{fill:transparent!important;stroke:rgba(255,255,255,0.0)!important;}
   .continent.playable{fill:transparent!important;pointer-events:all;}
   .continent.playable:hover{fill:rgba(80,255,160,0.2)!important;stroke:rgba(100,255,160,0.5)!important;}
   .continent.solved{fill:rgba(80,200,100,0.2)!important;}
@@ -760,12 +760,13 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       updated_at: new Date().toISOString()
     };
     await _supa.from('progress').delete().eq('user_id', uid).eq('region_id', regionId);
+    await _supa.from('progress').delete().eq('user_id', currentUser.id).eq('region_id', regionId);
     await _supa.from('progress').insert(payload);
   }
   async function loadProgress() {
     const { data:{ session } } = await _supa.auth.getSession();
     if (!session) return;
-    const { data } = await _supa.from('progress').select('*').eq('user_id', session.user.id);
+    const { data } = await _supa.from('progress').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
     if (!data) return;
     data.forEach(row => {
       if (row.region_id && row.region_id.substring(0,3) === 'wq:') {
