@@ -249,6 +249,9 @@
     touch-action:none;}
   .wq-tile{display:flex;flex-direction:column;align-items:center;cursor:grab;user-select:none;touch-action:none;}
   .wq-hint{text-align:center;font-size:0.8rem;color:#637373;max-width:640px;margin:2px auto 8px;}
+.continent-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:22px;padding:8px 18px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.18s;}
+.continent-btn:hover{background:rgba(80,220,140,0.28);border-color:rgba(80,220,140,0.5);}
+.cbt-prog{font-size:12px;opacity:0.75;font-weight:400;}
 </style>
 <!-- Supabase JS client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -294,8 +297,9 @@
   </header>
   <div class="globe-wrap"><svg class="score-ring" viewBox="0 0 200 200" id="scoreRingSvg"><circle class="ring-bg" cx="100" cy="100" r="90"/><circle class="ring-progress" cx="100" cy="100" r="90" id="scoreRingProgress" transform="rotate(-90 100 100)"/></svg><div class="world-wrap" id="worldWrap">
     <img src="https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=900&q=85" alt="Earth from space" draggable="false">
-    <svg id="worldSvg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="worldSvg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" style="display:none"></svg>
   </div></div>
+  <div id="continentBtns" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:14px 0;padding:0 12px;"></div>
   <div class="score-pct" id="scorePct"><span class="pct-num" id="scorePctNum">—</span><span class="pct-label">global accuracy</span></div>
   
   <div style="text-align:center;margin:2px 0 8px;"><button class="action" id="openWorldQuizBtn">🌍 World Quiz</button></div>
@@ -640,7 +644,7 @@ var WORLD_CONTINENTS = [
   {
     "id": "south-america",
     "name": "South America",
-    "playable": false,
+    "playable": true,
     "group": "south-america",
     "d": "M286.1,216.7 L302.8,219.4 L333.3,222.2 L361.1,236.1 L402.8,263.9 L402.8,277.8 L388.9,313.9 L366.7,319.4 L338.9,347.2 L311.1,402.8 L300,394.4 L305.6,361.1 L302.8,333.3 L305.6,300 L283.3,263.9 L277.8,244.4 L286.1,216.7 Z",
     "cx": 326.8,
@@ -649,7 +653,7 @@ var WORLD_CONTINENTS = [
   {
     "id": "europe",
     "name": "Europe",
-    "playable": false,
+    "playable": true,
     "group": "europe",
     "d": "M472.2,130.6 L475,105.6 L486.1,88.9 L513.9,77.8 L541.7,61.1 L577.8,52.8 L583.3,83.3 L611.1,122.2 L577.8,136.1 L550,138.9 L533.3,125 L505.6,130.6 L486.1,130.6 L472.2,130.6 Z",
     "cx": 527.6,
@@ -994,6 +998,20 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     });
     refreshWorldBadges();
   }
+  function buildContinentButtons(){
+    const container=document.getElementById('continentBtns');
+    if(!container)return;
+    container.innerHTML='';
+    WORLD_CONTINENTS.forEach(c=>{
+      if(!c.playable)return;
+      const btn=document.createElement('button');
+      btn.className='continent-btn';
+      btn.id='cbt-'+c.id;
+      btn.innerHTML=c.name+' <span class="cbt-prog">...</span>';
+      btn.addEventListener('click',()=>openRegionSelect(c.id));
+      container.appendChild(btn);
+    });
+  }
 
   let loadedWrongCounts = {};
   let loadedCorrectCounts = {};
@@ -1060,6 +1078,8 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
         const frac = total ? solvedCount / total : 0;
         
       }
+      const cBtn=document.getElementById('cbt-'+c.id);
+      if(cBtn)cBtn.querySelector('.cbt-prog').textContent=solvedCount+'/'+total;
     });
   }
 
@@ -1789,6 +1809,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   /* ============ END WORLD QUIZ LOGIC ============ */
 
   buildWorldMap();
+  buildContinentButtons();
   document.getElementById("openWorldQuizBtn").addEventListener("click", () => {
     buildWorldQuizMap();
     buildWorldQuizTray();
