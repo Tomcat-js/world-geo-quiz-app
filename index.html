@@ -44,7 +44,7 @@
   .screen.show{display:flex;}
 
   /* World map screen */
-  #screen-world{background:#050810;}
+  #screen-world{background:#050810;min-height:100vh;}
   #screen-world header{text-align:center;padding:24px 0 4px;}
   #screen-world header h1{
     color:#fff;font-size:clamp(2rem,5vw,3.2rem);margin:0;font-weight:900;
@@ -288,10 +288,7 @@
     <img src="https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=900&q=85" alt="Earth from space" draggable="false">
     <svg id="worldSvg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
-  <div class="legend">
-    <span><span class="swatch" style="background:#7bbf6a;"></span> Ready to play</span>
-    <span><span class="swatch" style="background:var(--soon);"></span> Coming soon</span>
-  </div>
+  
   <div style="text-align:center;margin:2px 0 8px;"><button class="action" id="openWorldQuizBtn">🌍 World Quiz</button></div>
 </section>
 
