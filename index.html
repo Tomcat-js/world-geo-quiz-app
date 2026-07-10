@@ -795,6 +795,43 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   ['north-africa','sub-saharan-africa'].forEach(id => { GHOST_SOURCES[id] = AFRICA_COUNTRIES; });
   const _allEurope = Object.values(EUROPE_REGIONS).flatMap(r => r.countries);
   ['west-europe','north-europe','south-europe','east-europe'].forEach(id => { GHOST_SOURCES[id] = _allEurope; });
+  const CONTINENT_REGION_GROUPS = {
+    'north-africa':     { regions: ['north-africa','sub-saharan-africa'], title: 'Africa Complete!' },
+    'sub-saharan-africa':{ regions: ['north-africa','sub-saharan-africa'], title: 'Africa Complete!' },
+    'west-europe':      { regions: ['west-europe','north-europe','south-europe','east-europe'], title: 'Europe Complete!' },
+    'north-europe':     { regions: ['west-europe','north-europe','south-europe','east-europe'], title: 'Europe Complete!' },
+    'south-europe':     { regions: ['west-europe','north-europe','south-europe','east-europe'], title: 'Europe Complete!' },
+    'east-europe':      { regions: ['west-europe','north-europe','south-europe','east-europe'], title: 'Europe Complete!' },
+    'east-asia':        { regions: ['east-asia','southeast-asia','south-asia','central-asia','middle-east'], title: 'Asia Complete!' },
+    'southeast-asia':   { regions: ['east-asia','southeast-asia','south-asia','central-asia','middle-east'], title: 'Asia Complete!' },
+    'south-asia':       { regions: ['east-asia','southeast-asia','south-asia','central-asia','middle-east'], title: 'Asia Complete!' },
+    'central-asia':     { regions: ['east-asia','southeast-asia','south-asia','central-asia','middle-east'], title: 'Asia Complete!' },
+    'middle-east':      { regions: ['east-asia','southeast-asia','south-asia','central-asia','middle-east'], title: 'Asia Complete!' },
+    'south-america':    { regions: ['south-america'], title: 'South America Complete!' },
+  };
+
+  function checkContinentComplete(regionId) {
+    const group = CONTINENT_REGION_GROUPS[regionId];
+    if (!group) return;
+    const allDone = group.regions.every(id => {
+      const ds = CONTINENT_DATASETS[id];
+      if (!ds) return true;
+      const st = gameState[id];
+      if (!st) return false;
+      return st.solved.size + st.wrong.size >= ds.countries.length;
+    });
+    if (!allDone) return;
+    let totalCorrect = 0, totalCountries = 0;
+    group.regions.forEach(id => {
+      const ds = CONTINENT_DATASETS[id];
+      const st = gameState[id];
+      if (!ds || !st) return;
+      totalCorrect += st.solved.size;
+      totalCountries += ds.countries.length;
+    });
+    showCelebration(totalCountries, totalCorrect, group.title);
+  }
+
 
   /* ---------------- WORLD SCREEN ---------------- */
   const screenWorld = document.getElementById("screen-world");
@@ -1460,7 +1497,8 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       refreshWorldBadges();
 
       if(st.solved.size + st.wrong.size === ds.countries.length){
-        showCelebration(ds.countries.length, st.solved.size, null);
+        showToast(st.solved.size + ' / ' + ds.countries.length + ' correct — region done!', 2800);
+        checkContinentComplete(currentId);
       saveProgress(currentId);
       }
     }, correctCodes.length || wrongCodes.length ? 450 : 0);
@@ -1741,15 +1779,22 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     const emoji = document.getElementById('celEmoji');
     const titleEl = document.getElementById('celTitle');
     const scoreEl = document.getElementById('celScore');
+    const msgEl = document.getElementById('celMsg');
     const starsEl = document.getElementById('celStars');
     const btn = document.getElementById('celBtn');
     const isWQ = !total;
     const pct = total > 0 ? correct / total : 1;
     emoji.textContent = isWQ ? '🌐' : (pct===1 ? '🏆' : pct>=0.7 ? '🌍' : '🗺️');
-    titleEl.textContent = title || 'Region Complete!';
+    titleEl.textContent = title || 'Complete!';
     scoreEl.textContent = total > 0 ? correct + ' / ' + total + ' correct!' : 'Every country named!';
+    if (msgEl) msgEl.textContent = isWQ ? ''
+      : pct === 1 ? 'Flawless — every country correct! 🎯'
+      : pct >= 0.85 ? 'Excellent work! You really know this!'
+      : pct >= 0.70 ? 'Nice effort! Try again to push your score higher.'
+      : 'Keep going! Replay each region to boost your score!';
     starsEl.textContent = isWQ ? '🌟🌟🌟' : (pct===1?'⭐⭐⭐':pct>=0.7?'⭐⭐':'⭐');
-    [emoji, titleEl, scoreEl, starsEl, btn].forEach(el => {
+    const els = [emoji, titleEl, scoreEl, msgEl, starsEl, btn].filter(Boolean);
+    els.forEach(el => {
       el.style.animation = '';
       el.style.opacity = '0';
       el.style.transform = isWQ ? 'scale(0.3)' : 'translateY(18px)';
@@ -1762,7 +1807,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       ? 'radial-gradient(ellipse at center,rgba(30,5,80,.99),rgba(3,0,20,.99))'
       : 'radial-gradient(ellipse at center,rgba(10,20,60,.98),rgba(3,8,25,.99))';
     ov.style.display = 'flex';
-    [emoji, titleEl, scoreEl, starsEl, btn].forEach((el, i) => {
+    els.forEach((el, i) => {
       setTimeout(() => {
         el.style.transition = isWQ
           ? 'opacity .5s ease, transform .6s cubic-bezier(0.175,0.885,0.32,1.275)'
@@ -1873,6 +1918,6 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   }
 })();
 </script>
-<div id="screen-celebrate" style="display:none;position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at center,rgba(10,20,60,.98),rgba(3,8,25,.99));flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.3rem;padding:2rem"><canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000"></canvas><div id="celEmoji" style="font-size:5.5rem;line-height:1.1;margin-bottom:.4rem">🌍</div><div id="celTitle" style="font-size:2.3rem;font-weight:900;color:#fff;margin:.2rem 0;letter-spacing:-.01em">Complete!</div><div id="celScore" style="font-size:1.25rem;color:rgba(255,255,255,.75);margin:.3rem 0 .6rem"></div><div id="celStars" style="font-size:2.8rem;letter-spacing:.2rem;margin-bottom:1.4rem">⭐⭐⭐</div><button id="celBtn" style="padding:.85rem 2.6rem;background:linear-gradient(135deg,#4ecdc4,#44af69);color:#fff;border:none;border-radius:2rem;font-size:1.15rem;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(78,205,196,.5);letter-spacing:.02em">Keep Exploring 🌏</button></div>
+<div id="screen-celebrate" style="display:none;position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at center,rgba(10,20,60,.98),rgba(3,8,25,.99));flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.3rem;padding:2rem"><canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000"></canvas><div id="celEmoji" style="font-size:5.5rem;line-height:1.1;margin-bottom:.4rem">🌍</div><div id="celTitle" style="font-size:2.3rem;font-weight:900;color:#fff;margin:.2rem 0;letter-spacing:-.01em">Complete!</div><div id="celScore" style="font-size:1.25rem;color:rgba(255,255,255,.75);margin:.3rem 0 .6rem"></div><div id="celMsg" style="font-size:.95rem;color:rgba(255,255,255,.62);margin:.1rem 0 .5rem;max-width:300px;text-align:center;line-height:1.4"></div><div id="celStars" style="font-size:2.8rem;letter-spacing:.2rem;margin-bottom:1.4rem">⭐⭐⭐</div><button id="celBtn" style="padding:.85rem 2.6rem;background:linear-gradient(135deg,#4ecdc4,#44af69);color:#fff;border:none;border-radius:2rem;font-size:1.15rem;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(78,205,196,.5);letter-spacing:.02em">Keep Exploring 🌏</button></div>
 </body>
 </html>
