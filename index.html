@@ -916,14 +916,25 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   }
 
   function updateScoreRing() {
-    const score = calcGlobalScore();
+    let total = 0, wrong = 0, solvedCount = 0;
+    Object.keys(CONTINENT_DATASETS).forEach(id => {
+      const ds = CONTINENT_DATASETS[id];
+      if (!ds) return;
+      total += ds.countries.length;
+      const st = gameState[id];
+      solvedCount += st ? st.solved.size : 0;
+      wrong += Math.max(st ? st.wrong.size : 0, loadedWrongCounts[id] || 0);
+    });
+    if (total === 0) return;
     const pctEl = document.getElementById('scorePct');
     const numEl = document.getElementById('scorePctNum');
     const ring = document.getElementById('scoreRingProgress');
-    if (score === null || !pctEl || !numEl || !ring) return;
+    if (!pctEl || !numEl || !ring) return;
+    const progress = Math.min(solvedCount / total, 1);
+    const accuracy = Math.round(((total - wrong) / total) * 100);
     const circ = 565.49;
-    ring.style.strokeDashoffset = circ * (1 - score / 100);
-    numEl.textContent = score;
+    ring.style.strokeDashoffset = circ * (1 - progress);
+    numEl.textContent = accuracy;
     pctEl.style.display = 'block';
   }
 
