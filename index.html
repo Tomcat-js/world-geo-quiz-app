@@ -949,7 +949,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
         REGION_GROUPS[c.id].forEach(regionId => {
           const ds = CONTINENT_DATASETS[regionId];
           const st = gameState[regionId];
-          solvedCount += st ? st.solved.size : 0;
+          solvedCount += st ? st.solved.size : (loadedCorrectCounts[regionId] || 0);
           total += ds.countries.length;
         });
       } else if(CONTINENT_DATASETS[c.id]){
