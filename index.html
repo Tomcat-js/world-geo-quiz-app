@@ -716,6 +716,32 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     }, { onConflict: 'merge' });
   }
 
+  function saveLocalProgress() {
+    try {
+      const snap = {};
+      for (const id of Object.keys(CONTINENT_DATASETS)) {
+        const st = gameState[id];
+        if (st && (st.solved.size || st.wrong.size)) {
+          snap[id] = { s: [...st.solved], w: [...st.wrong] };
+        }
+      }
+      localStorage.setItem('geo_v2', JSON.stringify(snap));
+    } catch(e) {}
+  }
+  function loadLocalProgress() {
+    try {
+      const snap = JSON.parse(localStorage.getItem('geo_v2') || 'null');
+      if (!snap) return;
+      for (const [id, data] of Object.entries(snap)) {
+        const ds = CONTINENT_DATASETS[id];
+        if (!ds || gameState[id]) continue;
+        const solved = new Set(data.s || []);
+        const wrong = new Set(data.w || []);
+        const active = ds.countries.map(c => c.code).filter(c => !solved.has(c) && !wrong.has(c));
+        gameState[id] = { solved, wrong, placements: {}, active, pool: [] };
+      }
+    } catch(e) {}
+  }
   async function saveProgress(regionId) {
     if (!currentUser) return;
     const ds = CONTINENT_DATASETS[regionId];
@@ -723,15 +749,18 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     if (!ds || !st) return;
     const { data:{ session } } = await _supa.auth.getSession();
     if (!session) return;
-    await _supa.from('progress').upsert({
-      user_id: session.user.id,
+    const uid = session.user.id;
+    const payload = {
+      user_id: uid,
       region_id: regionId,
       correct_count: st.solved.size,
       wrong_count: Math.max(st.wrong.size, loadedWrongCounts[regionId] || 0),
       total_count: ds.countries.length,
       is_complete: (st.solved.size + st.wrong.size) >= ds.countries.length,
       updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id,region_id' });
+    };
+    await _supa.from('progress').delete().eq('user_id', uid).eq('region_id', regionId);
+    await _supa.from('progress').insert(payload);
   }
   async function loadProgress() {
     const { data:{ session } } = await _supa.auth.getSession();
@@ -1113,7 +1142,8 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   const ACTIVE_SIZE = 999;
   let currentId = null;
   let byCode = {};
-  const gameState = {}; // id -> {pool, active, placements, solved, attempts}
+  const gameState = {}; // id -> {pool, active, placements, solved, attempts}  loadLocalProgress();
+
 
   function shuffle(arr){
     const a = arr.slice();
@@ -1495,6 +1525,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
 
       renderAll();
       refreshWorldBadges();
+      saveLocalProgress();
 
       if(st.solved.size + st.wrong.size === ds.countries.length){
         showToast(st.solved.size + ' / ' + ds.countries.length + ' correct — region done!', 2800);
