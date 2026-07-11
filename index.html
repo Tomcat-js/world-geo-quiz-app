@@ -1790,9 +1790,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
         wqNamed.add(item.id);
         saveWQProgress(item.id);
         buildWorldQuizMap();
-        buildWorldQuizTray();        if (wqNamed.size >= WORLD_QUIZ_ITEMS.length) {
-          showCelebration(0, 0, 'World Quiz Complete!');
-        }
+        buildWorldQuizTray();
 
         const quizItem = WORLD_QUIZ_ITEMS.find(i => i.id === item.id);
         if(quizItem && quizItem.type === "region-live"){
