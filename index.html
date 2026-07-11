@@ -768,7 +768,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   async function loadProgress() {
     const { data:{ session } } = await _supa.auth.getSession();
     if (!session) return;
-    const { data } = await _supa.from('progress').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
+    const { data } = await _supa.from('progress').select('*').eq('user_id', session.user.id).order('updated_at', { ascending: false });
     if (!data) return;
     data.forEach(row => {
       if (row.region_id && row.region_id.substring(0,3) === 'wq:') {
