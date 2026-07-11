@@ -787,6 +787,16 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
         for (let i = 0; i < row.wrong_count; i++) st.wrong.add('__wrong__' + i);
       }
     });
+    // Restore WQ visual state from saved progress
+    for (const itemId of wqNamed) {
+      const path = document.querySelector('[data-wq-id="' + itemId + '"]');
+      if (path) {
+        const wqItem = WORLD_QUIZ_ITEMS.find(i => i.id === itemId);
+        path.setAttribute('class', wqItem && wqItem.type === 'region-live' ? 'wq-item wq-region-named' : 'wq-item wq-country');
+      }
+      const tile = document.querySelector('.wq-tile[data-wq-id="' + itemId + '"]');
+      if (tile) tile.remove();
+    }
   }
 
   "use strict";
