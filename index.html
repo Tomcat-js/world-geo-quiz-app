@@ -1018,7 +1018,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       btn.className='continent-btn';
       btn.id='cbt-'+c.id;
       btn.innerHTML=c.name+' <span class="cbt-prog">...</span>';
-      btn.addEventListener('click',()=>openRegionSelect(c.id));
+      btn.style.pointerEvents='none'; btn.style.cursor='default';
       container.appendChild(btn);
     });
   }
