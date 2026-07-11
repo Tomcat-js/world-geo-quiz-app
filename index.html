@@ -714,7 +714,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   await _supa.from('progress').insert({
     user_id: currentUser.id,
     region_id: 'wq:' + itemId,
-    data: { solved: true }
+    correct_count: 1, wrong_count: 0, total_count: 1, is_complete: true, updated_at: new Date().toISOString(), data: { solved: true }
   });
 }
 
