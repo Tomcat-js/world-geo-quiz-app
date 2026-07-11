@@ -985,7 +985,8 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       path.setAttribute("d", c.d);
       path.setAttribute("class", "continent " + (c.playable ? "playable" : "soon"));
       path.setAttribute("data-id", c.id);
-      path.addEventListener("click", () => onContinentClick(c));
+      path.style.cursor = "default";
+      path.style.pointerEvents = "none";
       worldSvg.appendChild(path);
 
       const label = document.createElementNS(SVG_NS, "text");
