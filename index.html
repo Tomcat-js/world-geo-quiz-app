@@ -18,7 +18,7 @@
     --accent:#3a7ca5;
     --soon:#bcb9a6;
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box;
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
   body{display:flex;flex-direction:column;min-height:100vh;align-items:center;}
   header{width:100%;max-width:1000px;padding:14px 16px 6px;text-align:center;}
@@ -714,7 +714,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
   await _supa.from('progress').insert({
     user_id: currentUser.id,
     region_id: 'wq:' + itemId,
-    correct_count: 1, wrong_count: 0, total_count: 1, is_complete: true, updated_at: new Date().toISOString(), data: { solved: true }
+    correct_count: 1, wrong_count: 0, total_count: 1, is_complete: true, updated_at: new Date().toISOString()
   });
 }
 
