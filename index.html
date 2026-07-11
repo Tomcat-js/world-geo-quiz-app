@@ -11,7 +11,7 @@
     --sea:#bfe3ef;
     --land:#d7e8d4;
     --land-border:#8fae8a;
-    --tile:#ffffff;
+    --tile:#ffffff
     --tile-border:#3a7ca5;
     --good:#3aa655;
     --bad:#d1495b;
@@ -762,7 +762,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       updated_at: new Date().toISOString()
     };
     await _supa.from('progress').delete().eq('user_id', uid).eq('region_id', regionId);
-    await _supa.from('progress').delete().eq('user_id', currentUser.id).eq('region_id', regionId);
+    
     await _supa.from('progress').insert(payload);
   }
   async function loadProgress() {
@@ -773,7 +773,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
     data.forEach(row => {
       if (row.region_id && row.region_id.substring(0,3) === 'wq:') {
         wqNamed.add(row.region_id.slice(3));
-        wqState.solved.add(row.region_id.slice(3));
+        
         return;
       }
       loadedWrongCounts[row.region_id] = row.wrong_count;
@@ -1237,7 +1237,7 @@ if (typeof module !== "undefined") module.exports = WORLD_QUIZ_ITEMS;
       const parentEntry = WORLD_CONTINENTS.find(w => w.id === currentGameParent);
       backBtn.textContent = "← " + (parentEntry ? parentEntry.name : "Regions") + " regions";
     } else {
-      backBtn.textContent = "← World map";
+      backBtn.textContent = currentGameParent === "world-quiz" ? "← World quiz" : "← World map";
     }
     statTotal.textContent = ds.countries.length;
     svg.setAttribute("viewBox", ds.viewBox);
